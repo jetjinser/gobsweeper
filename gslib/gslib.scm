@@ -20,19 +20,19 @@
 (define safe #b000)
 (define mine #b001)
 
-(define (ready? board x y)
+(define (block-ready? board x y)
   (= (logand (board-ref/wrap board x y) #b110) ready))
 
-(define (opened? board x y)
+(define (block-opened? board x y)
   (= (logand (board-ref/wrap board x y) #b110) opened))
 
-(define (flagged? board x y)
+(define (block-flagged? board x y)
   (= (logand (board-ref/wrap board x y) #b110) flagged))
 
-(define (safe? board x y)
+(define (block-safe? board x y)
   (= (logand (board-ref/wrap board x y) #b001) safe))
 
-(define (mine? board x y)
+(define (block-mine? board x y)
   (= (logand (board-ref/wrap board x y) #b001) mine))
 
 (define* (bytevector-u8-fill! bv value
@@ -76,9 +76,9 @@
 (define (board-set! board x y t)
   (bytevector-u8-set! board (+ (* y board-size) x) t))
 
-(define (neighbors board x y)
+(define (board-neighbors board x y)
   (define (check x y)
-    (if (mine? board x y) 1 0))
+    (if (block-mine? board x y) 1 0))
   (+ (check (- x 1) (- y 1))
      (check x (- y 1))
      (check (+ x 1) (- y 1))
@@ -94,8 +94,15 @@
 (define (set x y t)
   (board-set! the-board x y t))
 
-(define (export-mine? x y)
-  (mine? the-board x y))
+(define (mine? x y)
+  (block-mine? the-board x y))
 
-(values ref set
-        export-mine?)
+(define (neighbors x y)
+  (board-neighbors the-board x y))
+
+(define (uncover x y)
+  (cond
+    [(mine? x y) -1]
+    [else (neighbors x y)]))
+
+(values ref set uncover)

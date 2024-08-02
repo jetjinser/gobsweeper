@@ -1,5 +1,5 @@
 <script lang="ts">
-  import init, { gobIsMine } from "$lib/gslib";
+  import init, { gobUncover } from "$lib/gslib";
   import GobBlock from "./GobBlock.svelte";
 
   const promise = init();
@@ -7,10 +7,14 @@
   const boardSize = 9;
 
   const status = (x: number, y: number) => {
-    if (gobIsMine(x, y)) {
-      return "💥";
-    } else {
-      return "_";
+    let uncovered = gobUncover(x, y);
+    switch (uncovered) {
+      case -1:
+        return "💥";
+      case 0:
+        return "";
+      default:
+        return uncovered;
     }
   };
 </script>
@@ -19,7 +23,11 @@
   <div class="gob-board">
     {#each Array(boardSize) as _, x}
       {#each Array(boardSize) as _, y}
-        <GobBlock gobStatus={status(x, y)} positionX={x + 1} positionY={y + 1} />
+        <GobBlock
+          gobStatus={() => status(x, y)}
+          positionX={x + 1}
+          positionY={y + 1}
+        />
       {/each}
     {/each}
   </div>
